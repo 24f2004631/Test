@@ -24,7 +24,8 @@ jobs:
     # --- Cache Step Definition ---
     # Prime the cache with a key based on the specific required prefix and the hash of requirements.txt
     - name: Prime cache-6b79bc5 (Cache Dependencies)
-      id: cache-6b79bc5-prime
+      # CHANGED: Setting the ID to the required reference name to fix the 'No workflow step' error.
+      id: prime-cache-6b79bc5 
       uses: actions/cache@v4
       with:
         # Cache the location where pip stores downloaded packages
@@ -37,11 +38,11 @@ jobs:
           cache-6b79bc5-${{ runner.os }}-
 
     # --- Status Reporting Step ---
-    - name: prime-cache-6b79bc5
-      # This step echoes the cache-hit output from the previous step
+    - name: Echo Cache Status
+      # CHANGED: The step below now correctly references the updated ID: prime-cache-6b79bc5
       run: |
         echo "--- Cache Status ---"
-        echo "Cache result for cache-6b79bc5: ${{ steps.cache-6b79bc5-prime.outputs.cache-hit }}"
+        echo "Cache result for cache-6b79bc5: ${{ steps.prime-cache-6b79bc5.outputs.cache-hit }}"
         # Output: "true" means dependencies were restored from cache (faster build)
         # Output: "false" means dependencies need to be installed (slower build, cache saved afterwards)
 
