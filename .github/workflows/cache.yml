@@ -1,38 +1,55 @@
-name: Cache Dependencies
+name: Python Dependency Caching CI
 
-on: [push, workflow_dispatch]
+on:
+  # Triggers the workflow on push or manually
+  push:
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
     steps:
-    - name: Checkout code
+    - name: Checkout repository code
       uses: actions/checkout@v4
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
+    - name: Set up Python 3.11
+      # Install the same Python version used in your Dockerfile for consistency
+      uses: actions/setup-python@v5
       with:
-        node-version: '20'
+        python-version: '3.11'
+        # Assign an ID to this step to retrieve version info if needed
+        id: setup-python
 
-    # --- Cache Step ---
-    - name: Prime cache-6b79bc5
-      id: cache-npm
+    # --- Cache Step Definition ---
+    # Prime the cache with a key based on the specific required prefix and the hash of requirements.txt
+    - name: Prime cache-6b79bc5 (Cache Dependencies)
+      id: cache-6b79bc5-prime
       uses: actions/cache@v4
       with:
-        path: ~/.npm # Directory where npm caches packages
-        key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}-${{ hashFiles('package.json') }}-${{ hashFiles('.npmrc') }}
+        # Cache the location where pip stores downloaded packages
+        path: ~/.cache/pip
+        # Use the specific key prefix, combined with OS, Python version, and requirements hash
+        key: cache-6b79bc5-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('requirements.txt') }}
+        # Fallback keys to use if the exact key doesn't match
         restore-keys: |
-          ${{ runner.os }}-node-
-          
-    # The cache-6b79bc5 key is used to guarantee the cache step name and ID match the request
-    # NOTE: The actual cache key used by actions/cache includes hashFiles for dependency freshness.
-    - name: prime-cache-6b79bc5
-      run: |
-        echo "Cache result for cache-6b79bc5: ${{ steps.cache-npm.outputs.cache-hit }}"
+          cache-6b79bc5-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-
+          cache-6b79bc5-${{ runner.os }}-
 
-    - name: Install Dependencies
-      run: npm install
-      
-    - name: Simple Build Step
-      run: echo "Build complete."
+    # --- Status Reporting Step ---
+    - name: prime-cache-6b79bc5
+      # This step echoes the cache-hit output from the previous step
+      run: |
+        echo "--- Cache Status ---"
+        echo "Cache result for cache-6b79bc5: ${{ steps.cache-6b79bc5-prime.outputs.cache-hit }}"
+        # Output: "true" means dependencies were restored from cache (faster build)
+        # Output: "false" means dependencies need to be installed (slower build, cache saved afterwards)
+
+    # --- Dependency Installation ---
+    - name: Install dependencies from requirements.txt
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run linting/tests (Placeholder)
+      run: echo "CI pipeline complete."
