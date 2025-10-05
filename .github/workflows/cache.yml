@@ -1,0 +1,38 @@
+name: Cache Dependencies
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    # --- Cache Step ---
+    - name: Prime cache-6b79bc5
+      id: cache-npm
+      uses: actions/cache@v4
+      with:
+        path: ~/.npm # Directory where npm caches packages
+        key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}-${{ hashFiles('package.json') }}-${{ hashFiles('.npmrc') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+          
+    # The cache-6b79bc5 key is used to guarantee the cache step name and ID match the request
+    # NOTE: The actual cache key used by actions/cache includes hashFiles for dependency freshness.
+    - name: prime-cache-6b79bc5
+      run: |
+        echo "Cache result for cache-6b79bc5: ${{ steps.cache-npm.outputs.cache-hit }}"
+
+    - name: Install Dependencies
+      run: npm install
+      
+    - name: Simple Build Step
+      run: echo "Build complete."
