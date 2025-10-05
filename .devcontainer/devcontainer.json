@@ -1,0 +1,31 @@
+{
+  // Sets the name of the dev container
+  "name": "ga2-1f5470",
+  
+  // Use a minimal Ubuntu base image and add Python via features
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+
+  // Add the Python feature, setting the version to match the Dockerfile (3.11)
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11"
+    }
+  },
+  
+  // Configure VS Code to install the required extensions
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // astral-sh.uv for the uv package manager language support
+        "astral-sh.uv",
+        // ms-python.python for general Python development tools
+        "ms-python.python"
+      ]
+    }
+  },
+
+  // Command run after the container is created.
+  // 1. Installs the uv tool itself globally (or in the environment).
+  // 2. Uses uv to install the 'fastapi' dependency, priming the cache.
+  "postCreateCommand": "pip install uv && uv pip install fastapi"
+}
